@@ -4,6 +4,10 @@ from movies.models import Movie
 from .models import Order, Item
 from django.contrib.auth.decorators import login_required
 from .utils import calculate_cart_total
+from .regions import REGIONS, REGION_CHOICES
+from django.contrib import messages
+from django.views.decorators.http import require_POST
+from django.db import transaction
 # Create your views here.
 def index(request):
     cart_total = 0
@@ -18,6 +22,8 @@ def index(request):
     template_data['title'] = 'Cart'
     template_data['movies_in_cart'] = movies_in_cart
     template_data['cart_total'] = cart_total
+    # pass the available regions to the cart page
+    template_data['region_choices'] = REGION_CHOICES
     return render(request, 'cart/index.html',
         {'template_data': template_data})
 def add(request, id):
@@ -31,9 +37,20 @@ def clear(request):
     return redirect('cart.index')
 
 @login_required
+@require_POST
+@transaction.atomic
 def purchase(request):
     cart = request.session.get('cart', {})
     movie_ids = list(cart.keys())
+    # get the region selected at checkout
+    region = request.POST.get('region', '')
+    # make sure the selected region is valid
+    if region not in REGIONS:
+        messages.error(
+            request,
+            'Choose your region before purchasing.'
+        )
+        return redirect('cart.index')
     if (movie_ids == []):
         return redirect('cart.index')
     movies_in_cart = Movie.objects.filter(id__in=movie_ids)
@@ -41,6 +58,7 @@ def purchase(request):
     order = Order()
     order.user = request.user
     order.total = cart_total
+    order.region = region
     order.save()
     for movie in movies_in_cart:
         item = Item()

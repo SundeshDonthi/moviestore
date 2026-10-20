@@ -1,0 +1,185 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+<!-- import leaflet styling for the map -->
+<link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+/>
+
+<div class="container py-4">
+
+    <!-- page title and description -->
+    <h2>Local Popularity Map</h2>
+
+    <p>
+        Explore the most purchased movies across
+        different regions of the United States.
+    </p>
+
+    <div class="row g-4">
+
+        <!-- display the interactive map -->
+        <div class="col-lg-8">
+
+            <div
+                id="popularity-map"
+                style="
+                    height: 460px;
+                    width: 100%;
+                    border-radius: 8px;
+                    border: 1px solid #ddd;
+                "
+            ></div>
+
+            <p class="text-muted mt-2">
+                Click a region to view its trending movies.
+            </p>
+
+        </div>
+
+        <!-- display trending movies for the selected region -->
+        <div class="col-lg-4">
+
+            <!-- dropdown to choose a region -->
+            <label
+                for="region-select"
+                class="form-label fw-semibold"
+            >
+                Choose region
+            </label>
+
+            <select
+                id="region-select"
+                class="form-select mb-3"
+                onchange="changeRegion(this.value)"
+            >
+                {% for marker in markers %}
+                    <option
+                        value="{{ marker.id }}"
+                        {% if marker.id == selected %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ marker.name }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <!-- show which region's movies are being displayed -->
+            <h4>
+                Trending in {{ selected_name }}
+            </h4>
+
+            <!-- list movies ranked by number of purchases -->
+            {% if top_movies %}
+
+                <ol class="list-group list-group-numbered">
+
+                    {% for movie in top_movies %}
+
+                        <li class="list-group-item
+                                   d-flex
+                                   justify-content-between
+                                   align-items-center">
+
+                            <!-- link to the movie's detail page -->
+                            <a href="{% url 'movies.show' movie.movie_id %}">
+                                {{ movie.name }}
+                            </a>
+
+                            <!-- display total purchased quantity -->
+                            <span class="badge bg-dark rounded-pill">
+                                {{ movie.count }} purchased
+                            </span>
+
+                        </li>
+
+                    {% endfor %}
+
+                </ol>
+
+            {% else %}
+
+                <!-- message if the region has no purchases -->
+                <div class="alert alert-info">
+                    No purchases recorded for
+                    this region yet.
+                </div>
+
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<!-- convert the django region data to JSON for javascript -->
+{{ markers|json_script:"region-marker-data" }}
+
+<!-- import leaflet javascript library -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+    // get the region information passed from django
+    const regions = JSON.parse(
+        document.getElementById(
+            'region-marker-data'
+        ).textContent
+    );
+
+    // create the map centered on the United States
+    const map = L.map('popularity-map').setView(
+        [39.0, -98.0],
+        4
+    );
+
+    
+    
+    // add map background using Esri tiles
+    L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        {
+            maxZoom: 19,
+            attribution: 'Tiles &copy; Esri'
+        }
+    ).addTo(map);
+
+
+
+    // get the URL for the popularity map page
+    const destination = "{% url 'movies.popularity' %}";
+
+    // reload the page with the selected region
+    function changeRegion(regionId) {
+        window.location.href =
+            destination + '?region=' +
+            encodeURIComponent(regionId);
+    }
+
+    // create a marker for each geographic region
+    regions.forEach(region => {
+
+        // position the marker using the region's coordinates
+        const marker = L.marker(
+            [region.lat, region.lng]
+        ).addTo(map);
+
+        // show the region name and purchase count when clicked
+        marker.bindPopup(
+            `<strong>${region.name}</strong>
+             <p>${region.total} purchased copies</p>`
+        );
+
+        // update the trending movies when a marker is selected
+        marker.on('click', () => {
+            changeRegion(region.id);
+        });
+
+    });
+
+</script>
+
+{% endblock %}

@@ -39,7 +39,30 @@
         <a class="btn btn-outline-secondary mb-2"><b>Total
           to pay:</b> ${{ template_data.cart_total }}</a>
         {% if template_data.movies_in_cart|length > 0 %}
-        <a href="{% url 'cart.purchase' %}" class="btn bg-dark text-white mb-2">Purchase</a>
+        
+        <!-- allow users to select a region at checkout -->
+        <form action="{% url 'cart.purchase' %}"
+              method="post"
+              class="d-inline-block text-start me-2">
+          {% csrf_token %}
+
+          <label for="region" class="form-label">
+            Your region
+          </label>
+
+          <select id="region" name="region"
+                  class="form-select mb-2" required>
+            <option value="">Choose a region</option>
+            {% for value, name in template_data.region_choices %}
+              <option value="{{ value }}">{{ name }}</option>
+            {% endfor %}
+          </select>
+
+          <button type="submit" class="btn bg-dark text-white mb-2">
+            Purchase
+          </button>
+        </form>
+
         <a href="{% url 'cart.clear' %}">
           <button class="btn btn-danger mb-2">
             Remove all movies from Cart
