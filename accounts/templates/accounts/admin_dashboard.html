@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="p-3">
+    <div class="container">
+        <div class="col mx-auto mb-3">
+            <h2>Admin Dashboard</h2>
+            <hr />
+            <ul class="nav nav-tabs mb-3">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{% url 'accounts.admin_dashboard' %}">Top Purchaser</a>
+                </li>
+            </ul>
+
+            {% if template_data.top_users %}
+            {% for user_obj, purchases in template_data.top_purchases %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    {% if template_data.top_users|length > 1 %}Top purchaser (tied){% else %}Top purchaser{% endif %}
+                </div>
+                <div class="card-body">
+                    <h4>{{ user_obj.username }}</h4>
+                    <p><b>Movies purchased:</b> {{ template_data.top_count }}</p>
+                    <table class="table table-bordered table-striped text-center">
+                        <thead>
+                            <tr>
+                                <th scope="col">Movie</th>
+                                <th scope="col">Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in purchases %}
+                            <tr>
+                                <td>{{ p.movie__name }}</td>
+                                <td>{{ p.quantity }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endfor %}
+
+            <h5>All users by movies purchased</h5>
+            <table class="table table-bordered table-striped text-center">
+                <thead>
+                    <tr>
+                        <th scope="col">User</th>
+                        <th scope="col">Movies Purchased</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in template_data.purchasers %}
+                    <tr>
+                        <td>{{ u.username }}</td>
+                        <td>{{ u.movies_purchased }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p>No purchases have been made yet.</p>
+            {% endif %}
+        </div>
+    </div> 
+</div>
+{% endblock content %}
