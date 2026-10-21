@@ -39,6 +39,7 @@
             {% endif %}
             {% if user.is_staff %}
             <a class="nav-link" href="{% url 'movies.top_commenter' %}">Top Commenter</a>
+            <a class="nav-link" href="{% url 'movies.top_movies' %}">Top Movies</a>
             {% endif %}
             {% if messages %}
             <div class="container mt-3">

@@ -191,3 +191,41 @@ def top_commenter(request):
         'all_users': users
     }
     return render(request, 'movies/top_commenter.html', {'template_data': template_data})
+
+@staff_member_required
+def top_movies(request):
+    all_reviews = Review.objects.all()
+    movie_review_counts = {}
+    max_review_count = 0
+    max_review_movie = Review
+    for review in all_reviews:
+        if review.movie not in movie_review_counts:
+            movie_review_counts[review.movie] = 1
+        else:
+            movie_review_counts[review.movie] += 1
+        if movie_review_counts[review.movie] > max_review_count:
+            max_review_count = movie_review_counts[review.movie]
+            max_review_movie = review.movie
+
+    all_items = Item.objects.all()
+    movie_item_counts = {}
+    max_item_count = 0
+    max_item_movie = Movie
+    for item in all_items:
+        if item.movie not in movie_item_counts:
+            movie_item_counts[item.movie] = item.quantity
+        else:
+            movie_item_counts[item.movie] += item.quantity
+        if movie_item_counts[item.movie] > max_item_count:
+            max_item_count = movie_item_counts[item.movie]
+            max_item_movie = item.movie
+
+
+    context = {
+        'max_review_movie' : max_review_movie,
+        'max_review_count' : max_review_count,
+        'max_item_movie' : max_item_movie,
+        'max_item_count' : max_item_count
+    }
+
+    return render(request, 'movies/top_movie.html', context)

@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+
+
+{% block content %}
+<h1 style="color:darkblue" class="m-3">
+    Top Bought and Reviewed Movies
+</h1>
+<div class="card m-3 p-3">
+    <h3>
+        Top Reviewed Movie
+    </h3>
+    <p> The movie {{ max_review_movie }} was reviewed {{max_review_count}} time(s) </p>
+    <h3>
+        Top Purchased Movie
+    </h3>
+    <p> The movie {{ max_item_movie }} was purchased {{max_item_count}} time(s) </p>
+
+</div>
+
+
+{% endblock %}

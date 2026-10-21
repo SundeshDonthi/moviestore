@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Sum
 from cart.models import Item
+from movies.models import Movie, Review
 # Create your views here.
 def signup(request):
     template_data = {}
@@ -56,6 +57,19 @@ def admin_dashboard(request):
     .annotate(movies_purchased=Sum('order__item__quantity'))
     .order_by('-movies_purchased', 'username')
     )
+    all_reviews = Review.objects.all()
+    movie_review_counts = {}
+    max_review_count = 0
+    max_review_movie = Review
+    for review in all_reviews:
+        if review.movie not in movie_review_counts:
+            movie_review_counts[review] = 1
+        else:
+            movie_review_counts[review] += 1
+        if movie_review_counts[review] > max_review_count:
+            max_review_count = movie_review_counts[review]
+            max_review_movie = review
+            
     top_count = purchasers[0].movies_purchased if purchasers else 0
     top_users = [u for u in purchasers if u.movies_purchased == top_count]
     template_data = {}
@@ -71,4 +85,10 @@ def admin_dashboard(request):
          .order_by('-quantity', 'movie__name'))
          for u in top_users
     ]
-    return render(request, 'accounts/admin_dashboard.html', {'template_data': template_data})
+
+    content = {
+        'template_data' : template_data,
+        'max_review_movie' : max_review_movie
+    }
+
+    return render(request, 'accounts/admin_dashboard.html', content)
