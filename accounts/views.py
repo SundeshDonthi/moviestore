@@ -5,6 +5,9 @@ from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required 
 from django.contrib.auth.models import User
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Sum
+from cart.models import Item
 # Create your views here.
 def signup(request):
     template_data = {}
@@ -44,3 +47,28 @@ def orders(request):
     template_data['orders'] = request.user.order_set.all()
     return render(request, 'accounts/orders.html',
         {'template_data': template_data})
+
+@staff_member_required(login_url='accounts.login')
+def admin_dashboard(request):
+    purchasers = (
+        User.objects.filter(order__isnull=False)
+
+    .annotate(movies_purchased=Sum('order__item__quantity'))
+    .order_by('-movies_purchased', 'username')
+    )
+    top_count = purchasers[0].movies_purchased if purchasers else 0
+    top_users = [u for u in purchasers if u.movies_purchased == top_count]
+    template_data = {}
+    template_data['title'] = 'Admin Dashboard'
+    template_data['top_users'] = top_users
+    template_data['top_count'] = top_count
+    template_data['purchasers'] = purchasers
+
+    template_data['top_purchases'] = [
+        (u, Item.objects.filter(order__user=u)
+         .values('movie__name')
+         .annotate(quantity=Sum('quantity'))
+         .order_by('-quantity', 'movie__name'))
+         for u in top_users
+    ]
+    return render(request, 'accounts/admin_dashboard.html', {'template_data': template_data})
