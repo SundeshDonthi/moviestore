@@ -1,7 +1,7 @@
 from django.contrib import messages
-
+from django.db.models import Avg
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Movie, Report, Review
+from .models import Movie, Report, Review, Rating
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from cart.models import Item
@@ -23,11 +23,32 @@ def index(request):
 def show(request, id):
     movie = Movie.objects.get(id=id)
     reviews = Review.objects.filter(movie=movie, is_removed=False)
+    ratings = Rating.objects.filter(movie=movie)
+    user_rating = None
+    if request.user.is_authenticated:
+        user_rating = Rating.objects.filter(movie=movie, user=request.user).first()
+    avg = ratings.aggregate((Avg('stars')))['stars__avg']
     template_data = {}
     template_data['title'] = movie.name
     template_data['movie'] = movie
     template_data['reviews'] = reviews
+    template_data['average_rating'] = round(avg, 1) if avg is not None else None
+    template_data['rating_count'] = ratings.count()
+    template_data['user_rating'] = user_rating 
     return render(request, 'movies/show.html', {'template_data': template_data})
+
+@login_required
+def rate_movie(request, id):
+    stars = request.POST.get('stars')
+    if request.method == 'POST' and stars in ['1', '2', '3', '4', '5']:
+        movie = Movie.objects.get(id=id)
+        Rating.objects.update_or_create(
+            movie = movie, user = request.user, defaults = {'stars': stars}
+        )
+        return redirect('movies.show', id=id)
+    else:
+        return redirect('movies.show', id=id)
+        
 
 @login_required
 def create_review(request, id):
