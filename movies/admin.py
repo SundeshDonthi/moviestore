@@ -1,7 +1,7 @@
 from django.contrib import admin
 
 # Register your models here.
-from .models import Movie, Review, Report
+from .models import Movie, Review, Report, Rating
 class MovieAdmin(admin.ModelAdmin):
     ordering = ['name']
     search_fields = ['name']
@@ -32,3 +32,4 @@ class ReportAdmin(admin.ModelAdmin):
 admin.site.register(Movie, MovieAdmin)
 admin.site.register(Review)
 admin.site.register(Report, ReportAdmin)
+admin.site.register(Rating)
