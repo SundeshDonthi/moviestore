@@ -3,7 +3,9 @@ from django.db.models import Avg
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Movie, Report, Review, Rating
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum
+from django.db.models import Sum, Count
+from django.contrib.auth.models import User
+from django.contrib.admin.views.decorators import staff_member_required
 from cart.models import Item
 from cart.regions import REGIONS
 # Create your views here.
@@ -173,3 +175,19 @@ def popularity_map(request):
             'top_movies': rankings[selected],
         }
     )
+
+@staff_member_required
+def top_commenter(request):
+    users = (User.objects.annotate(comment_count=Count('review')).order_by("-comment_count", "username"))
+    top_count = users[0].comment_count
+    top_users = []
+    for user in users:
+        if user.comment_count == top_count:
+            top_users.append(user)
+    template_data = {
+        'title': 'Top Commenter',
+        'top_users': top_users,
+        'top_count': top_count,
+        'all_users': users
+    }
+    return render(request, 'movies/top_commenter.html', {'template_data': template_data})

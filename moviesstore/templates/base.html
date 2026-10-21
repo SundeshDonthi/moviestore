@@ -37,6 +37,9 @@
             <a class="nav-link" href="{% url 'accounts.login' %}">Login</a>
             <a class="nav-link" href="{% url 'accounts.signup' %}">Sign Up</a>
             {% endif %}
+            {% if user.is_staff %}
+            <a class="nav-link" href="{% url 'movies.top_commenter' %}">Top Commenter</a>
+            {% endif %}
             {% if messages %}
             <div class="container mt-3">
                 {% for message in messages %}

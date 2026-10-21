@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Top Commenter</h2>
+    {% if template_data.top_users %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5>Most Comments Posted</h5>
+                {% for user in template_data.top_users %}
+                <p>
+                    <strong>{{ user.username }}</strong>
+                    - {{ template_data.top_count}} comments
+                </p>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <p>No comments have been posted yet.</p>
+    {% endif %}
+</div>
+
+{% endblock content %}
